@@ -37,7 +37,7 @@ namespace ControleEstoque.Web.Models
                     comando.CommandText = "select * from usuario where login=@login and senha=@senha";
 
                     comando.Parameters.Add("@login", SqlDbType.VarChar).Value = login;
-                    comando.Parameters.Add("@senha", SqlDbType.VarChar).Value = CriptoHelper.HashMD5(senha);
+                    comando.Parameters.Add("@senha", SqlDbType.VarChar).Value = senha;
 
                     var reader = comando.ExecuteReader();
                     if (reader.Read())
