@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Configuration;
 using System.Data;
-using System.Data.SqlClient;
 
 namespace ControleEstoque.Web
 {
@@ -19,15 +20,15 @@ namespace ControleEstoque.Web
         {
             var ret = 0;
 
-            using (var conexao = new SqlConnection())
+            using (var conexao = new MySqlConnection())
             {
                 conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
                 conexao.Open();
-                using (var comando = new SqlCommand())
+                using (var comando = new MySqlCommand())
                 {
                     comando.Connection = conexao;
                     comando.CommandText = "select count(*) from perfil";
-                    ret = (int)comando.ExecuteScalar();
+                    ret = Convert.ToInt32(comando.ExecuteScalar());
                 }
             }
 
@@ -38,17 +39,17 @@ namespace ControleEstoque.Web
         {
             var ret = new List<PerfilModel>();
 
-            using (var conexao = new SqlConnection())
+            using (var conexao = new MySqlConnection())
             {
                 conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
                 conexao.Open();
-                using (var comando = new SqlCommand())
+                using (var comando = new MySqlCommand())
                 {
                     var pos = (pagina - 1) * tamPagina;
 
                     comando.Connection = conexao;
                     comando.CommandText = string.Format(
-                        "select * from perfil order by nome offset {0} rows fetch next {1} rows only",
+                        "select * from perfil order by nome LIMIT {0},{1}",
                         pos > 0 ? pos - 1 : 0, tamPagina);
                     var reader = comando.ExecuteReader();
                     while (reader.Read())
@@ -70,11 +71,11 @@ namespace ControleEstoque.Web
         {
             var ret = new List<PerfilModel>();
 
-            using (var conexao = new SqlConnection())
+            using (var conexao = new MySqlConnection())
             {
                 conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
                 conexao.Open();
-                using (var comando = new SqlCommand())
+                using (var comando = new MySqlCommand())
                 {
                     comando.Connection = conexao;
                     comando.CommandText = string.Format("select * from perfil where ativo=1 order by nome");
@@ -98,16 +99,16 @@ namespace ControleEstoque.Web
         {
             PerfilModel ret = null;
 
-            using (var conexao = new SqlConnection())
+            using (var conexao = new MySqlConnection())
             {
                 conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
                 conexao.Open();
-                using (var comando = new SqlCommand())
+                using (var comando = new MySqlCommand())
                 {
                     comando.Connection = conexao;
                     comando.CommandText = "select * from perfil where (id = @id)";
 
-                    comando.Parameters.Add("@id", SqlDbType.Int).Value = id;
+                    comando.Parameters.Add("@id", MySqlDbType.Int32).Value = id;
 
                     var reader = comando.ExecuteReader();
                     if (reader.Read())
@@ -131,16 +132,16 @@ namespace ControleEstoque.Web
 
             if (RecuperarPeloId(id) != null)
             {
-                using (var conexao = new SqlConnection())
+                using (var conexao = new MySqlConnection())
                 {
                     conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
                     conexao.Open();
-                    using (var comando = new SqlCommand())
+                    using (var comando = new MySqlCommand())
                     {
                         comando.Connection = conexao;
                         comando.CommandText = "delete from perfil where (id = @id)";
 
-                        comando.Parameters.Add("@id", SqlDbType.Int).Value = id;
+                        comando.Parameters.Add("@id", MySqlDbType.Int32).Value = id;
 
                         ret = (comando.ExecuteNonQuery() > 0);
                     }
@@ -156,11 +157,11 @@ namespace ControleEstoque.Web
 
             var model = RecuperarPeloId(this.Id);
 
-            using (var conexao = new SqlConnection())
+            using (var conexao = new MySqlConnection())
             {
                 conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
                 conexao.Open();
-                using (var comando = new SqlCommand())
+                using (var comando = new MySqlCommand())
                 {
                     comando.Connection = conexao;
 
@@ -168,18 +169,18 @@ namespace ControleEstoque.Web
                     {
                         comando.CommandText = "insert into perfil (nome, ativo) values (@nome, @ativo); select convert(int, scope_identity())";
 
-                        comando.Parameters.Add("@nome", SqlDbType.VarChar).Value = this.Nome;
-                        comando.Parameters.Add("@ativo", SqlDbType.VarChar).Value = (this.Ativo ? 1 : 0);
+                        comando.Parameters.Add("@nome", MySqlDbType.VarChar).Value = this.Nome;
+                        comando.Parameters.Add("@ativo", MySqlDbType.VarChar).Value = (this.Ativo ? 1 : 0);
 
-                        ret = (int)comando.ExecuteScalar();
+                        ret = Convert.ToInt32(comando.ExecuteScalar());
                     }
                     else
                     {
                         comando.CommandText = "update perfil set nome=@nome, ativo=@ativo where id = @id";
 
-                        comando.Parameters.Add("@nome", SqlDbType.VarChar).Value = this.Nome;
-                        comando.Parameters.Add("@ativo", SqlDbType.VarChar).Value = (this.Ativo ? 1 : 0);
-                        comando.Parameters.Add("@id", SqlDbType.Int).Value = this.Id;
+                        comando.Parameters.Add("@nome", MySqlDbType.VarChar).Value = this.Nome;
+                        comando.Parameters.Add("@ativo", MySqlDbType.VarChar).Value = (this.Ativo ? 1 : 0);
+                        comando.Parameters.Add("@id", MySqlDbType.Int32).Value = this.Id;
 
                         if (comando.ExecuteNonQuery() > 0)
                         {

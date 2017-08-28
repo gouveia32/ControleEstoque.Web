@@ -1,9 +1,9 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Configuration;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
 
@@ -25,15 +25,15 @@ namespace ControleEstoque.Web.Models
         {
             var ret = 0;
 
-            using (var conexao = new SqlConnection())
+            using (var conexao = new MySqlConnection())
             {
                 conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
                 conexao.Open();
-                using (var comando = new SqlCommand())
+                using (var comando = new MySqlCommand())
                 {
                     comando.Connection = conexao;
                     comando.CommandText = "select count(*) from unidade_medida";
-                    ret = (int)comando.ExecuteScalar();
+                    ret = Convert.ToInt32(comando.ExecuteScalar());
                 }
             }
 
@@ -44,17 +44,17 @@ namespace ControleEstoque.Web.Models
         {
             var ret = new List<UnidadeMedidaModel>();
 
-            using (var conexao = new SqlConnection())
+            using (var conexao = new MySqlConnection())
             {
                 conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
                 conexao.Open();
-                using (var comando = new SqlCommand())
+                using (var comando = new MySqlCommand())
                 {
                     var pos = (pagina - 1) * tamPagina;
 
                     comando.Connection = conexao;
                     comando.CommandText = string.Format(
-                        "select * from unidade_medida order by nome offset {0} rows fetch next {1} rows only",
+                        "select * from unidade_medida order by nome LIMIT {0},{1}",
                         pos > 0 ? pos - 1 : 0, tamPagina);
                     var reader = comando.ExecuteReader();
                     while (reader.Read())
@@ -77,16 +77,16 @@ namespace ControleEstoque.Web.Models
         {
             UnidadeMedidaModel ret = null;
 
-            using (var conexao = new SqlConnection())
+            using (var conexao = new MySqlConnection())
             {
                 conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
                 conexao.Open();
-                using (var comando = new SqlCommand())
+                using (var comando = new MySqlCommand())
                 {
                     comando.Connection = conexao;
                     comando.CommandText = "select * from unidade_medida where (id = @id)";
 
-                    comando.Parameters.Add("@id", SqlDbType.Int).Value = id;
+                    comando.Parameters.Add("@id", MySqlDbType.Int32).Value = id;
 
                     var reader = comando.ExecuteReader();
                     if (reader.Read())
@@ -111,16 +111,16 @@ namespace ControleEstoque.Web.Models
 
             if (RecuperarPeloId(id) != null)
             {
-                using (var conexao = new SqlConnection())
+                using (var conexao = new MySqlConnection())
                 {
                     conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
                     conexao.Open();
-                    using (var comando = new SqlCommand())
+                    using (var comando = new MySqlCommand())
                     {
                         comando.Connection = conexao;
                         comando.CommandText = "delete from unidade_medida where (id = @id)";
 
-                        comando.Parameters.Add("@id", SqlDbType.Int).Value = id;
+                        comando.Parameters.Add("@id", MySqlDbType.Int32).Value = id;
 
                         ret = (comando.ExecuteNonQuery() > 0);
                     }
@@ -136,11 +136,11 @@ namespace ControleEstoque.Web.Models
 
             var model = RecuperarPeloId(this.Id);
 
-            using (var conexao = new SqlConnection())
+            using (var conexao = new MySqlConnection())
             {
                 conexao.ConnectionString = ConfigurationManager.ConnectionStrings["principal"].ConnectionString;
                 conexao.Open();
-                using (var comando = new SqlCommand())
+                using (var comando = new MySqlCommand())
                 {
                     comando.Connection = conexao;
 
@@ -148,9 +148,9 @@ namespace ControleEstoque.Web.Models
                     {
                         comando.CommandText = "insert into unidade_medida (nome, sigla, ativo) values (@nome, @sigla, @ativo); select convert(int, scope_identity())";
 
-                        comando.Parameters.Add("@nome", SqlDbType.VarChar).Value = this.Nome;
-                        comando.Parameters.Add("@sigla", SqlDbType.VarChar).Value = this.Sigla;
-                        comando.Parameters.Add("@ativo", SqlDbType.VarChar).Value = (this.Ativo ? 1 : 0);
+                        comando.Parameters.Add("@nome", MySqlDbType.VarChar).Value = this.Nome;
+                        comando.Parameters.Add("@sigla", MySqlDbType.VarChar).Value = this.Sigla;
+                        comando.Parameters.Add("@ativo", MySqlDbType.VarChar).Value = (this.Ativo ? 1 : 0);
 
                         ret = (int)comando.ExecuteScalar();
                     }
@@ -158,10 +158,10 @@ namespace ControleEstoque.Web.Models
                     {
                         comando.CommandText = "update unidade_medida set nome=@nome, sigla=@sigla, ativo=@ativo where id = @id";
 
-                        comando.Parameters.Add("@nome", SqlDbType.VarChar).Value = this.Nome;
-                        comando.Parameters.Add("@sigla", SqlDbType.VarChar).Value = this.Sigla;
-                        comando.Parameters.Add("@ativo", SqlDbType.VarChar).Value = (this.Ativo ? 1 : 0);
-                        comando.Parameters.Add("@id", SqlDbType.Int).Value = this.Id;
+                        comando.Parameters.Add("@nome", MySqlDbType.VarChar).Value = this.Nome;
+                        comando.Parameters.Add("@sigla", MySqlDbType.VarChar).Value = this.Sigla;
+                        comando.Parameters.Add("@ativo", MySqlDbType.VarChar).Value = (this.Ativo ? 1 : 0);
+                        comando.Parameters.Add("@id", MySqlDbType.Int32).Value = this.Id;
 
                         if (comando.ExecuteNonQuery() > 0)
                         {
